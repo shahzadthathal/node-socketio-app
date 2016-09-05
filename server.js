@@ -36,125 +36,144 @@ app.get('/',function(req,res){
 io.on('connection', function(socket){
   console.log('a user connected');
 
+    //chat user
+      socket.on('support-message', function(data){
+         var userMessage = {
+                      message:data.msg,
+                    };
+        insertMessage(userMessage,'support-message',data.usrConnectedSocket);
+         //io.to(data.usrConnectedSocket).emit('support-message',res);
+      });
+
+     // register user
       socket.on('register',function(data){
         var user = {
                     first_name: data.first_name,
                     email:      data.email,
-                    socketid:   socket.id
+                    socketid:  socket.id  //socketid:   mysql.escape(socket.id)
                   };
         var userMessage = {
                     message: data.message
-        };  
-          pool.getConnection(function(err, connection) {    
-           connection.query("SELECT id FROM support_user WHERE email = " + mysql.escape(user.email) + " LIMIT 1 " , function(err,row){
-            if(err){
-              console.log(err);
-            }
-            if(row.length > 0){
-              console.log('already register',row[0].id);          
-              userMessage.sender_id = row[0].id;
-              connection.query("UPDATE support_user SET socketid = :socketid", { socketid: user.socketid },function(errr, result){
-                  if(err)
-                    console.log(err);
-
-                  var query2 = connection.query('Insert into support_message set ?', userMessage, function(err,result){
-                     io.to(user.socketid).emit('register',{
-                                        success:1,
-                                        msg:userMessage.message,
-                                        usrConnectedSocket:user.socketid
-                                      });
-                  });
-              });          
-            }
-            else{
-                  var query = connection.query('INSERT INTO support_user SET ?', user, function(err, result) {
-                    if (err) 
-                      console.log(err);
-
-                      userMessage.sender_id = result.insertId;
-                      var query2 = connection.query('Insert into support_message set ?', userMessage, function(err,result){              
-                         io.to(user.socketid).emit('register',{
-                                          success:1,
-                                          msg:userMessage.message,
-                                          usrConnectedSocket:user.socketid
-                                        });
-                      })
-                  });
-                 io.to(data.usrConnectedSocket).emit('register',{success:0});           
-            }
-           });
-           connection.release();
-         });
-          io.to(data.usrConnectedSocket).emit('register',{success:0}); 
+        };
+        checkUniqueEmail(user,userMessage);                 
       });
+ 
 
-
-      socket.on('support-message', function(data){
-         var res = {
-                      msg:data.msg
-                    };
-         io.to(data.usrConnectedSocket).emit('support-message',res);
-
-      });
-
-      socket.on('login-user', funciton(data){
+      //login user
+      socket.on('login-user', function(data){
         loginUser(socket.id,data);
       });
 
-  socket.on('disconnect', function(){
-    console.log('user disconnected');
-  });
+      // socket disconnect
+      socket.on('disconnect', function(){
+        console.log('user disconnected');
+      });
 
 });
 
-function checkUniqueEmail(email)
+function checkUniqueEmail(user, userMessage)
 {
   pool.getConnection(function(err, connection) {
     if(err)
         throw err;
-       connection.query("SELECT id FROM support_user WHERE email = " + mysql.escape(email) + " LIMIT 1 " , function(err,row){
+       connection.query("SELECT id FROM support_user WHERE email = " + mysql.escape(user.email) + " LIMIT 1 " , function(err,row){
         if(err){
           console.log(err);
         }
         if(row.length > 0){
-          return row[0].id;
+            userMessage.sender_id = row[0].id;
+            updateUser(row[0].id , user.socketid, connection);
         }
         else{
-          return false;
+          registerUser(user, userMessage, connection);
         }
       });
       connection.release();
   });
 }
-function registerUser(socketId, data)
+function registerUser(user, userMessage, connection)
+{
+
+      var query = connection.query('INSERT INTO support_user SET ?', user, function(err, result) {
+        if(err)
+          throw err;
+
+        if(result){
+          userMessage.sender_id = result.insertId;
+          insertMessage(userMessage,'register',user.socketid);
+        }
+      });
+      //console.log(query.sql);      
+}
+function insertMessage(userMessage,event,socketId)
 {
   pool.getConnection(function(err, connection) {
-    if(err)
-        throw err;
-      connection.query('INSERT INTO support_user SET ?', user, function(err, result) {
-                     io.to(user.socketid).emit('register',{
-                                        success:1,
-                                        msg:userMessage.message,
-                                        usrConnectedSocket:user.socketid
-                                      });
-      });
-      connection.release();
+  if(err)
+      throw err;
+
+   connection.query("SELECT id, socketid FROM support_user WHERE role_id in(1,2,4)  LIMIT 1 " , function(err,row){
+        if(err){
+           throw err;
+        }
+        if(row.length > 0){
+            var reply_socketid = row[0].socketid;
+            userMessage.receiver_id = row[0].id;
+           // updateUser(row[0].id , user.socketid);
+            var query2 = connection.query('Insert into support_message set ?', userMessage, function(err,result){
+              if(err)
+                throw err;
+              if(result){
+                // send messagae to user
+                io.to(socketId).emit(event,{
+                            success:1,
+                            msg:userMessage.message,
+                            usrConnectedSocket:socketId,
+                            replysocketid : reply_socketid
+                });
+
+                // send message to support admin
+                 var res = {
+                      msg:userMessage.message,
+                      usrConnectedSocket:socketId,
+                      replysocketid: reply_socketid
+                    };
+                io.to(reply_socketid).emit('support-message',res);
+
+                return;
+              }
+            });               
+        }
+        else{
+          var query2 = connection.query('Insert into support_message set ?', userMessage, function(err,result){
+              if(err)
+                throw err
+
+              io.to(socketId).emit(event,{
+                              success:1,
+                              msg:userMessage.message,
+                              usrConnectedSocket:socketId
+              });
+
+          });
+        }
+    });
+   connection.release();
   });
 }
 
-function updateUser(userId,socketId)
+function updateUser(userId,socketId, event, message, connection)
 {
-  pool.getConnection(function(err, connection) {
-      if(err)
-        throw err;
+    connection.query('UPDATE support_user SET socketid = ? WHERE id = ?', [socketId,  userId], function(err, results) {
+       if(err)
+          throw err;
 
-      connection.query('UPDATE support_user SET socketid = ? WHERE id = ?', [socketId,  userId], function(err, results) {
-         if(err)
-            throw err;
+        io.to(socketId).emit(event,{
+                                    success:1,
+                                    usrConnectedSocket: socketId,
+                                    msg:message
+                                  });
 
-      });
-      connection.release();
-  }); 
+    });
 }
 
 function loginUser(socketId, data)
@@ -162,15 +181,15 @@ function loginUser(socketId, data)
   pool.getConnection(function(err, connection) {
     if(err)
         throw err;
-      connection.query("SELECT id,first_name FROM support_user WHERE email = " + mysql.escape(data.email) + " And password = " + mysql.escape(data.password) + " LIMIT 1 " , function(err,row){
+      connection.query("SELECT id,first_name FROM support_user WHERE email = " + mysql.escape(data.email) + "  LIMIT 1 " , function(err,row){
           if(err){
             throw err;
           }
           if(row.length > 0){
-            updateUser(row[0].id,socketId);                   
+            updateUser(row[0].id, socketId, 'login-user', 'Login Success!', connection);                   
           }
           else{
-            io.to(user.socketid).emit('register',{
+            io.to(socketId).emit('login-user',{
                                       success:0,
                                       msg:'Invalid username or password'
                                     });
@@ -180,26 +199,11 @@ function loginUser(socketId, data)
   });
 }
 
-function insertMessage(event,socketId,messageObjec)
-{
-  pool.getConnection(function(err, connection) {
-    if(err)
-      throw err;
-      connection.query('Insert into support_message set ?', messageObjec, function(err,result){ 
-       if(err)
-        throw err;           
-          io.to(socketId).emit(event,{
-                        success:1,
-                        msg:messageObjec.message,
-                        usrConnectedSocket:user.socketId
-                      });
-      });
-      connection.release();
-  });    
-}
 
 http.listen(port,function(){
+
 	console.log('Listing on http://localhost:'+port);
+
 });
 
 
