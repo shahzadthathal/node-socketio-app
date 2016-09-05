@@ -22,24 +22,33 @@ app.get('/',function(req,res){
 var usernames = {};
 
 // rooms which are currently available in chat
-var rooms = ['room1','room2','room3'];
+var rooms = ['Default Room'];
 io.sockets.on('connection', function (socket) {
 
 	// when the client emits 'adduser', this listens and executes
-	socket.on('adduser', function(username){
+	socket.on('register', function(data){
+		console.log(data);
+		
+		rooms.push(data.first_name);
+
 		// store the username in the socket session for this client
-		socket.username = username;
+		socket.username = data.first_name;
 		// store the room name in the socket session for this client
-		socket.room = 'room1';
+		socket.room = data.first_name;
 		// add the client's username to the global list
-		usernames[username] = username;
+		usernames[data.first_name] = data.first_name;
 		// send client to room 1
-		socket.join('room1');
+		socket.join(data.first_name);
 		// echo to client they've connected
-		socket.emit('updatechat', 'SERVER', 'you have connected to room1');
+
+		
+		console.log("rooms:",rooms);
+
+
+		socket.emit('updatechat', 'SERVER', 'you have connected'+socket.room);
 		// echo to room 1 that a person has connected to their room
-		socket.broadcast.to('room1').emit('updatechat', 'SERVER', username + ' has connected to this room');
-		socket.emit('updaterooms', rooms, 'room1');
+		socket.broadcast.to(data.first_name).emit('updatechat', 'SERVER', data.first_name + ' has connected to this room');
+		socket.emit('updaterooms', rooms, data.first_name);
 	});
 
 	// when the client emits 'sendchat', this listens and executes
