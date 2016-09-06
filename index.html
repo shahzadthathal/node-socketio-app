@@ -3,46 +3,392 @@
 <html>
   <head>
     <title>Socket.IO chat</title>
+
+        <style>
+
+    /* Bordered form */
+form {
+    border: 3px solid #f1f1f1;
+}
+
+/* Full-width inputs */
+input[type=text], input[type=password], input[type=textarea] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+textarea {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+
+/* Set a style for all buttons */
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+#message{
+     padding: 12px 20px;
+    height: 80px;
+    border-radius: 15px;
+    border-left: 8px solid green;
+    border-right: 8px solid green;
+}
+/* Extra style for the cancel button (red) */
+.cancelbtn {
+    width: auto;
+    padding: 10px 18px;
+    background-color: #f44336;
+}
+
+/* Center the avatar image inside this container */
+.imgcontainer {
+    text-align: center;
+    margin: 24px 0 12px 0;
+}
+
+/* Avatar image */
+img.avatar {
+    width: 40%;
+    border-radius: 50%;
+}
+
+/* Add padding to containers */
+.container {
+    padding: 16px;
+}
+
+/* The "Forgot password" text */
+span.psw {
+    float: right;
+    padding-top: 16px;
+}
+
+/* Change styles for span and cancel button on extra small screens */
+@media screen and (max-width: 300px) {
+    span.psw {
+        display: block;
+        float: none;
+    }
+    .cancelbtn {
+        width: 100%;
+    }
+}
+
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+    /*  form { padding: 3px;width: 100%; margin: auto; }
+      form input { border: 2px; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }*/
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+
+
+
+ul.tab {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+ul.tab li {float: left;}
+
+ul.tab li a {
+    display: inline-block;
+    color: black;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: 0.3s;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+ul.tab li a:hover {
+    background-color: #ddd;
+}
+
+ul.tab li a:focus, .active {
+    background-color: #ccc;
+}
+
+.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 2px solid #ccc;
+    border-top: none;
+    width: 500px;
+}
+.show{
+  display: block;;
+}
+
+
+.Ticket{     clear: both;
+    height: auto;
+    overflow: hidden;
+    width: 450px;
+    border: 2px solid #ccc;
+    padding: 4px; }
+.HelpticketBox{ clear:both; width:430px; height:auto; overflow:hidden; background-color:#f6f5f5; padding:18px; border:1px solid #a09f9f;
+-webkit-border-radius:8px;-moz-border-radius:8px; border-radius:8px; }
+.Txt21{ font-size:21px;}
+.TxtLeft{ float:left;}
+.TxtRight{ float:right;}
+.TxtPara{ clear:both;}
+
+.comment {clear:both; width:100%; height:auto; overflow:hidden;}
+.commentrow { float:left; clear:both; max-width:250px;margin:20px 0;background-color:rgb(0, 142, 247); padding:10px; color:#fff;-webkit-border-radius:8px;-moz-border-radius:8px; border-radius:8px;border-left-color: #00aeff;}
+.commentrow:nth-child(odd) { float:right; clear:both;max-width:250px; margin:20px 0;background-color:#f6f5f5; padding:10px;color:#424242;-webkit-border-radius:8px;-moz-border-radius:8px; border-radius:8px;border-left-color: #00aeff;}
+
+
+@media only screen and (max-width :1093px){
+  .HelpticketBox{ clear:both; width:88%;}
+  .commentrow { width:88%; }
+  .commentrow:nth-child(odd) { width:88%; }
+  }
+
+
+
+
+    </style>
+
   </head>
   <body>
 
 
-<form action="" id="messageForm">        
-        <div class="container">
-		    <input type="text" id="m" autocomplete="off" placeholder="Your message">
-		    <button>Send</button>
-		</div>    
-    </form>
+
+
+
+<div id="chat" style="display:none;">
+
+<ul class="tab" id="tabs">
+</ul>
+
+<div id="tabscontent">
+</div>
+
+
+<!-- <div style="float:left;width:300px;height:250px;overflow:scroll-y;padding:10px;">
+        <div id="conversation"></div>
+        <input id="data" style="width:200px;" />
+        <input type="button" id="datasend" value="send" />
+      </div> -->
+
+
+</div> <!-- chat -->
+
+
+
+<!-- <div class="Ticket">
+      <div class="HelpticketBox">
+        <p class="TxtPara">Hi I have problem to login my account, can you guys please help me??? waitnig for you guys reply!!!</p>
+      </div>
+      <div class="comment">
+              <div class="commentrow">
+                  <p class="TxtLeft">
+                  <span class="Txt21">Zahoor</span>
+                  </p>
+                  <p class="TxtPara">Hi there, zahoor is here </p>
+              </div>
+              <div class="commentrow">
+                  <p class="TxtLeft">
+                  <span class="Txt21">Shahzad</span>
+                  </p>
+                  <p class="TxtPara">This is developer testing </p>
+              </div>
+      </div>
+</div>
+ -->
+
+
+    <div id="login">
+      <form action="" id="loginForm">
+      <div class="container">
+            <label><b>Email</b></label>
+          <input type="text"  name="email" id="loginemail">
+
+          <label><b>Password</b></label>
+          <input type="password" autocomplete="off" name="password" id="password">
+          <button>Login</button>
+    </div>
+   
+      </form>
+    </div>
 
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+ <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+
 <script>
 
+  var socket = io('http://localhost:3000');
 
-// set-up a connection between the client and the server
-var socket = io.connect();
+  // on connection to server, ask for user's name with an anonymous callback
+  socket.on('connect', function(){
+    // call the server-side function 'adduser' and send one parameter (value of prompt)
+   // socket.emit('adduser', prompt("What's your name?"));
+  });
 
-// let's assume that the client page, once rendered, knows what room it wants to join
-var room = "abc123";
 
-socket.on('connect', function() {
-   // Connected, let's sign-up for to receive messages for this room
-   socket.emit('join', room);
+ // listener, whenever the server emits 'updatechat', this updates the chat body
+  socket.on('updatechat', function (username, data) {
+   // $('#conversation').append('<b>'+username + ':</b> ' + data + '<br>');
+   console.log(username);
+   console.log(data);
+
+   $('#conversation_'+data.room).append('<div class="commentrow"><p class="TxtLeft"><span class="Txt21">'+username + '</span></p> <p class="TxtPara">' + data.message + '</p></div>');
+
+  });
+
+
+
+socket.on('getRooms',function(rooms){
+    
+    $('#tabs').empty();
+    $('#tabscontent').empty();
+    $.each(rooms, function(key, value){
+     value = value.replace(/'/g,"");
+      if(key == 0){
+        $('#tabs').append(' <li><a  class="tablinks active" onclick="openRoom(\''+event+'\', \''+value+'\' )">' + value + '</a></li>');
+        $('#tabscontent').append('<div id="'+value+'" class="tabcontent show"> <div class="Ticket"><div class="HelpticketBox"><p class="TxtPara">'+value+'</p></div><div id="conversation_'+value+'" class="comment"></div></div><div class="container"> <input type="text"  name="message" id="message"> </div> </div>');
+      }
+      else{
+        $('#tabs').append(' <li><a  class="tablinks" onclick="openRoom(\''+event+'\', \''+value+'\' )">' + value + '</a></li>');
+      
+         $('#tabscontent').append('<div id="'+value+'" class="tabcontent"> <div class="Ticket"><div class="HelpticketBox"><p class="TxtPara">'+value+'</p></div><div id="conversation_'+value+'" class="comment"></div></div><div class="container"> <input type="text"  name="message" id="message">  </div> </div>');
+       }
+    });
+
+      $('.active').trigger('click');
+
 });
 
-socket.on('message', function(data) {
-   console.log('Incoming message:', data);
+
+// listener, whenever the server emits 'updateRooms', this updates the room the client is in
+socket.on('updateRooms', function(rooms, current_room) 
+{
+
+    $('#tabs').empty();
+    $('#tabscontent').empty();
+    $.each(rooms, function(key, value){
+      
+      value = value.replace(/'/g,"");
+
+       if(value == current_room){
+        $('#tabs').append(' <li><a  class="tablinks active" onclick="openRoom(\''+event+'\', \''+value+'\' )">' + value + '</a></li>');
+         $('#tabscontent').append('<div id="'+value+'" class="tabcontent show"> <div class="Ticket"><div class="HelpticketBox"><p class="TxtPara">'+value+'</p></div><div id="conversation_'+value+'" class="comment"></div></div><div class="container"> <input type="text"  name="message" id="message"> </div> </div>');
+       }
+       else{
+        $('#tabs').append(' <li><a  class="tablinks" onclick="openRoom(\''+event+'\', \''+value+'\' )">' + value + '</a></li>');
+         $('#tabscontent').append('<div id="'+value+'" class="tabcontent"> <div class="Ticket"><div class="HelpticketBox"><p class="TxtPara">'+value+'</p></div><div id="conversation_'+value+'" class="comment"></div></div><div class="container"> <input type="text"  name="message" id="message"> </div> </div>');
+       }
+    });
+
 });
 
+// login form submision
+ $('#loginForm').submit(function(){
+    var email = $('#loginemail').val();
+    var password = $('#password').val();
+    var objLogin = {
+      "email":email,
+      "password":password
+    };
+    socket.emit('loginUser',objLogin);
+    return false;
+});
 
- $('#messageForm').submit(function(){
+socket.on('loginUser', function(data){
+  if(data.success){
+    $('#login').hide();
+    $('#chat').show();
 
- });
+      socket.emit('getRooms',{token:data.user.token});
+  }
+});
+
+  // on load of page
+  $(function(){
+
+    // when the client clicks SEND
+    $('#datasend').click( function() {
+      //var message = $('#data').val();
+      var message = $('#message').val();
+      $('#message').val('');
+      // tell server to execute 'sendchat' and send along one parameter
+      socket.emit('sendchat', message);
+    });
+
+    // when the client hits ENTER on their keyboard
+/*   $('#message').keypress(function(e) {
+      if(e.which == 13) {
+         var message = $('#message').val();
+         $('#message').val('');
+         socket.emit('sendchat', message);
+        $(this).blur();
+      }
+    });*/
+
+
+  });
+
+  $(document).keypress(function(event) {
+    if(event.which == 13) {
+      var message = event.target.value;
+      event.target.value = '';
+      socket.emit('sendchat', message);
+    }
+  });
+
+
+
+  function openRoom(evt, roomName) {
+    
+    console.log(roomName);
+    socket.emit('switchRoom', roomName);
+
+    // Declare all variables
+   // var i, tabcontent, tablinks;
+
+    // Get all elements with class="tabcontent" and hide them
+  //  tabcontent = document.getElementsByClassName("tabcontent");
+   // console.log(tabcontent.length);
+   // for (i = 0; i < tabcontent.length; i++) {
+  //      tabcontent[i].style.display = "none";
+  //  }
+
+    // Get all elements with class="tablinks" and remove the class "active"
+   /* tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }*/
+
+    // Show the current tab, and add an "active" class to the link that opened the tab
+   // $('#'+roomName).css('display','block');
+    //$(evt.currentTarget).addClass("active");
+    
+}
 
 </script>
-
-
-
-</body>
-</html>
